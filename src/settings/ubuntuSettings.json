@@ -89,7 +89,8 @@
       "[concat(parameters('templateBaseUrl'), 'scripts/kibana-install.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/vm-disk-utils-0.1.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/user-information.sh')]",
-      "[concat(parameters('templateBaseUrl'), 'scripts/data-node-install.sh')]"
+      "[concat(parameters('templateBaseUrl'), 'scripts/data-node-install.sh')]",
+      "[concat(parameters('templateBaseUrl'), 'scripts/java-ubuntu-install.sh')]"
     ],
     "ubuntuSkus": {
       "2": "14.04.5-LTS",

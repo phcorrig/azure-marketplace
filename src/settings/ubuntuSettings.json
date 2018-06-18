@@ -87,6 +87,8 @@
     "ubuntuScripts": [
       "[concat(parameters('templateBaseUrl'), 'scripts/elasticsearch-ubuntu-install.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/kibana-install.sh')]",
+      "[concat(parameters('templateBaseUrl'), 'scripts/benchmark-install.sh')]",
+      "[concat(parameters('templateBaseUrl'), 'scripts/install-java.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/vm-disk-utils-0.1.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/user-information.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/data-node-install.sh')]"
@@ -140,6 +142,18 @@
           },
           "protectedSettings": {
             "commandToExecute": "[concat('bash data-node-install.sh -', variables('dataNodeShortOpt'), variables('commonShortOpts'), variables('commonInstallParams'), ' -U \"http://app-lon02.marketo.com/index.php/leadCapture/save2\" -I \"813-MAM-392\" -c \"', parameters('phoneHomeSettings').company, '\" -e \"', parameters('phoneHomeSettings').email, '\" -f \"', parameters('phoneHomeSettings').firstName, '\" -g \"', parameters('phoneHomeSettings').lastName, '\" -t \"', parameters('phoneHomeSettings').jobTitle, '\" -s \"', parameters('phoneHomeSettings').topology, '\" -o \"', parameters('phoneHomeSettings').country, '\"')]"
+          }
+        },
+        "benchmark": {
+          "publisher": "Microsoft.Azure.Extensions",
+          "type": "CustomScript",
+          "typeHandlerVersion": "2.0",
+          "autoUpgradeMinorVersion": true,
+          "settings": {
+            "fileUris": "[variables('ubuntuScripts')]"
+          },
+          "protectedSettings": {
+            "commandToExecute": "[concat('bash benchmark-install.sh -y', variables('commonShortOpts'), variables('commonInstallParams'))]"
           }
         },
         "kibana": {
@@ -199,6 +213,10 @@
     },
     "jumpboxssh": {
       "value": "[reference('elasticsearch-nodes').outputs.jumpboxssh.value]",
+      "type": "string"
+    },
+    "benchmarkssh": {
+      "value": "[reference('elasticsearch-nodes').outputs.benchmarkssh.value]",
       "type": "string"
     }
   }

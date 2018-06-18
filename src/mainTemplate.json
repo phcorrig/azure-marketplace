@@ -4,7 +4,7 @@
   "parameters": {
     "artifactsBaseUrl": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/elastic/azure-marketplace/master/src",
+      "defaultValue": "https://raw.githubusercontent.com/elastic/azure-marketplace/benchmarking/src",
       "metadata": {
         "artifactsBaseUrl": "Base URL of the Elastic template gallery package"
       }
@@ -236,6 +236,17 @@
       ],
       "metadata": {
         "description": "Optionally add a virtual machine to the deployment which can be used to connect and manage virtual machines within the cluster. Not required if installing Kibana, as Kibana can be used as a jumpbox"
+      }
+    },
+    "benchmark": {
+      "type": "string",
+      "defaultValue": "No",
+      "allowedValues": [
+        "Yes",
+        "No"
+      ],
+      "metadata": {
+        "description": "Optionally add a virtual machine to the deployment with rally installed, for benchmarking the deployed Elasticsearch cluster"
       }
     },
     "vmHostNamePrefix": {
@@ -491,6 +502,52 @@
       ],
       "metadata": {
         "description": "Size of the Elasticsearch client nodes"
+      }
+    },
+    "vmSizeBenchmark": {
+      "type": "string",
+      "defaultValue": "Standard_DS4_v2",
+      "allowedValues": [
+        "Standard_DS3",
+        "Standard_DS4",
+        "Standard_DS11",
+        "Standard_DS12",
+        "Standard_DS13",
+        "Standard_DS14",
+        "Standard_DS3_v2",
+        "Standard_DS4_v2",
+        "Standard_DS5_v2",
+        "Standard_DS11_v2",
+        "Standard_DS12_v2",
+        "Standard_DS13_v2",
+        "Standard_DS14_v2",
+        "Standard_DS15_v2",
+        "Standard_F4s",
+        "Standard_F8s",
+        "Standard_F16s"
+      ],
+      "metadata": {
+        "description": "Size of the Elasticsearch benchmark node"
+      }
+    },
+    "vmBenchmarkDiskCount": {
+      "type": "int",
+      "defaultValue": 16,
+      "minValue": 1,
+      "metadata": {
+        "description": "Number of disks to attach to benchmark node in RAID 0 setup. If 1 disk is selected, it is not RAIDed."
+      }
+    },
+    "vmBenchmarkDiskSize": {
+      "type": "string",
+      "defaultValue": "Large",
+      "allowedValues": [
+        "Small",
+        "Medium",
+        "Large"
+      ],
+      "metadata": {
+        "description": "The disk size of each attached disk, Small (128Gb), Medium (512Gb) or Large (1024Gb). For Premium Storage, this equates to P10, P20 and P30, respectively."
       }
     },
     "adminUsername": {
@@ -1072,6 +1129,12 @@
       "[variables('tmpVmSizeDataDisks')]"
     ],
     "resolvedDataDiskCount": "[min(variables('dataDiskOptions'))]",
+    "tmpVmSizeBenchmarkDisks": "[variables('dataSkuSettings')[parameters('vmSizeBenchmark')].dataDisks]",
+    "benchmarkDiskOptions": [
+      "[parameters('vmBenchmarkDiskCount')]",
+      "[variables('tmpVmSizeBenchmarkDisks')]"
+    ],
+    "resolvedBenchmarkDiskCount": "[min(variables('benchmarkDiskOptions'))]",
     "kibanaHttps": "[if(and(greater(length(parameters('kibanaKeyBlob')), 0), greater(length(parameters('kibanaCertBlob')), 0)), 'Yes', 'No')]",
     "topologySettings": {
       "dataNodesAreMasterEligible": "[parameters('dataNodesAreMasterEligible')]",
@@ -1084,12 +1147,18 @@
       "vNetLoadBalancerIp": "[parameters('vNetLoadBalancerIp')]",
       "vmSizeMasterNodes": "[parameters('vmSizeMasterNodes')]",
       "vmSizeKibana": "[parameters('vmSizeKibana')]",
+      "vmSizeBenchmark": "[parameters('vmSizeBenchmark')]",
       "kibana": "[parameters('kibana')]",
       "kibanaKeyBlob": "[parameters('kibanaKeyBlob')]",
       "kibanaKeyPassphrase": "[parameters('kibanaKeyPassphrase')]",
       "kibanaCertBlob": "[parameters('kibanaCertBlob')]",
       "kibanaHttps": "[variables('kibanaHttps')]",
       "jumpbox": "[parameters('jumpbox')]",
+      "benchmark": "[parameters('benchmark')]",
+      "benchmarkNodeStorageSettings": {
+        "diskSize": "[variables('dataDiskSizes')[parameters('vmBenchmarkDiskSize')]]",
+        "dataDisks": "[variables('resolvedBenchmarkDiskCount')]"
+      },
       "dataNodeStorageSettings": {
         "accountType": "[variables('resolvedStorageAccountType')]",
         "diskSize": "[variables('dataDiskSizes')[parameters('vmDataDiskSize')]]",
@@ -1262,6 +1331,10 @@
     },
     "jumpboxssh": {
       "value": "[reference('virtual-machines').outputs.jumpboxssh.value]",
+      "type": "string"
+    },
+    "benchmarkssh": {
+      "value": "[reference('virtual-machines').outputs.benchmarkssh.value]",
       "type": "string"
     }
   }

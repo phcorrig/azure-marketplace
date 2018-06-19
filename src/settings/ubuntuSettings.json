@@ -39,10 +39,16 @@
       }
     },
     "azureCloudStorageAccount": {
-        "type": "object",
-        "metadata": {
-            "description": "The storage settings for the Azure Cloud plugin"
-        }
+      "type": "object",
+      "metadata": {
+          "description": "The storage settings for the Azure Cloud plugin"
+      }
+    },
+    "azureFilesSettings": {
+      "type": "secureObject",
+      "metadata": {
+        "description": "The settings for Azure Files Storage"
+      }
     },
     "elasticTags": {
       "type": "object",
@@ -82,14 +88,20 @@
       "Yes": "X"
     },
     "enableAnonymousAccessOpt": "[variables('enableAnonymousAccessOpts')[parameters('topologySettings').enableAnonymousAccess]]",
-    "commonShortOpts": "[concat(variables('dedicatedMasterNodesShortOpt'),  variables('installPluginsShortOpt'), variables('installAzureCloudPluginShortOpt'), variables('enableAnonymousAccessOpt'), 'n ')]",
-    "commonInstallParams": "[concat('\"', parameters('esSettings').clusterName, '\" -v \"', parameters('esSettings').version, '\" -m ', parameters('esSettings').heapSize,' -A \"', parameters('esSettings').securityAdminPwd, '\" -R \"', parameters('esSettings').securityReadPwd, '\" -K \"', parameters('esSettings').securityKibanaPwd, '\" -S \"', parameters('esSettings').securityLogstashPwd, '\" -B \"', parameters('esSettings').securityBootstrapPwd, '\" -Z ', parameters('topologySettings').vmDataNodeCount,' -p \"', variables('namespacePrefix'), '\" -a \"', parameters('azureCloudStorageAccount').name, '\" -k \"', parameters('azureCloudStorageAccount').key, '\" -E \"', parameters('azureCloudStorageAccount').suffix, '\" -L \"', parameters('esSettings').installAdditionalPlugins, '\" -C \"', parameters('esSettings').yamlConfiguration, '\"')]",
+    "azureFileStorageOpts": {
+      "No": "",
+      "Yes": "w"
+    },
+    "azureFileStorageOpt": "[variables('azureFileStorageOpts')[parameters('azureFilesSettings').install]]",
+    "commonShortOpts": "[concat(variables('dedicatedMasterNodesShortOpt'),  variables('installPluginsShortOpt'), variables('installAzureCloudPluginShortOpt'), variables('enableAnonymousAccessOpt'), variables('azureFileStorageOpt'), 'n ')]",
+    "commonInstallParams": "[concat('\"', parameters('esSettings').clusterName, '\" -v \"', parameters('esSettings').version, '\" -m ', parameters('esSettings').heapSize,' -A \"', parameters('esSettings').securityAdminPwd, '\" -R \"', parameters('esSettings').securityReadPwd, '\" -K \"', parameters('esSettings').securityKibanaPwd, '\" -S \"', parameters('esSettings').securityLogstashPwd, '\" -B \"', parameters('esSettings').securityBootstrapPwd, '\" -Z ', parameters('topologySettings').vmDataNodeCount,' -p \"', variables('namespacePrefix'), '\" -a \"', parameters('azureCloudStorageAccount').name, '\" -k \"', parameters('azureCloudStorageAccount').key, '\" -E \"', parameters('azureCloudStorageAccount').suffix, '\" -L \"', parameters('esSettings').installAdditionalPlugins, '\" -C \"', parameters('esSettings').yamlConfiguration, '\" -r \"', parameters('azureFilesSettings').storageAccountName, '\" -b \"', parameters('azureFilesSettings').storageAccountKey, '\" -u \"', parameters('azureFilesSettings').endpointSuffix, '\" -q ', parameters('azureFilesSettings').quota)]",
     "ubuntuScripts": [
       "[concat(parameters('templateBaseUrl'), 'scripts/elasticsearch-ubuntu-install.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/kibana-install.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/benchmark-install.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/install-java.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/vm-disk-utils-0.1.sh')]",
+      "[concat(parameters('templateBaseUrl'), 'scripts/azure-file-share.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/user-information.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/data-node-install.sh')]"
     ],
@@ -198,6 +210,9 @@
           },
           "networkSettings": {
             "value": "[parameters('networkSettings')]"
+          },
+          "azureFilesSettings": {
+            "value": "[parameters('azureFilesSettings')]"
           },
           "elasticTags": {
             "value": "[parameters('elasticTags')]"

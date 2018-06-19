@@ -47,6 +47,13 @@ help()
     echo "-a set the default storage account for azure cloud plugin"
     echo "-k set the key for the default storage account for azure cloud plugin"
 
+    echo "-w mount azure file storage"
+    echo "-r set the storage account for azure file storage"
+    echo "-b set the key for the storage account for azure file storage"
+    echo "-u set the endpoint suffix for azure file storage"
+    echo "-q set the quota in GB for azure file storage"
+    echo "-i set the share name for azure file storage"
+
     echo "-h view this help content"
 }
 
@@ -72,9 +79,19 @@ YAML_CONFIGURATION=""
 INSTALL_AZURECLOUD_PLUGIN=0
 STORAGE_ACCOUNT=""
 STORAGE_KEY=""
+STORAGE_SUFFIX=""
+
 CLUSTER_USES_DEDICATED_MASTERS=0
 DATANODE_COUNT=0
 DATA_ONLY_NODE=0
+
+AZURE_FILE_STORAGE=0
+AZURE_FILE_STORAGE_ACCOUNT=""
+AZURE_FILE_STORAGE_ACCOUNT_KEY=""
+AZURE_FILE_STORAGE_ENDPOINT_SUFFIX="core.windows.net"
+AZURE_FILE_STORAGE_QUOTA=0
+AZURE_FILE_STORAGE_SHARE="${HOSTNAME}"
+AZURE_FILE_STORAGE_MOUNT="/afs"
 
 USER_ADMIN_PWD="changeme"
 USER_READ_PWD="changeme"
@@ -94,7 +111,7 @@ COUNTRY=""
 INSTALL_SWITCHES=""
 
 #Loop through options passed
-while getopts :n:m:v:A:R:K:S:Z:p:U:I:c:e:f:g:t:s:o:a:k:L:C:B:E:Xxyzldjh optname; do
+while getopts :n:m:v:A:R:K:S:Z:p:U:I:c:e:f:g:t:s:o:a:k:L:C:B:E:r:b:u:q:i:wXxyzldjh optname; do
   log "Option $optname set"
   case $optname in
     n) #set cluster name
@@ -147,6 +164,24 @@ while getopts :n:m:v:A:R:K:S:Z:p:U:I:c:e:f:g:t:s:o:a:k:L:C:B:E:Xxyzldjh optname;
       ;;
     E) #azure storage account endpoint suffix
       STORAGE_SUFFIX="${OPTARG}"
+      ;;
+    w) # mount azure file storage
+      AZURE_FILE_STORAGE=1
+      ;;
+    r) #storage account for azure file storage
+      AZURE_FILE_STORAGE_ACCOUNT="${OPTARG}"
+      ;;
+    b) # key for the storage account for azure file storage
+      AZURE_FILE_STORAGE_ACCOUNT_KEY="${OPTARG}"
+      ;;
+    u) # endpoint suffix for azure file storage
+      AZURE_FILE_STORAGE_ENDPOINT_SUFFIX="${OPTARG}"
+      ;;
+    q) # quota in GB for azure file storage
+      AZURE_FILE_STORAGE_QUOTA=${OPTARG}
+      ;;
+    i) # share name for azure file storage
+      AZURE_FILE_STORAGE_SHARE="${OPTARG}"
       ;;
     d) #cluster is using dedicated master nodes
       CLUSTER_USES_DEDICATED_MASTERS=1
@@ -222,8 +257,17 @@ if [ $ANONYMOUS_ACCESS -eq 1 ]; then
   INSTALL_SWITCHES="$INSTALL_SWITCHES -X"
 fi
 
+if [ $AZURE_FILE_STORAGE -eq 1 ]; then
+  INSTALL_SWITCHES="$INSTALL_SWITCHES -w"
+fi
+
 # install elasticsearch
-bash elasticsearch-ubuntu-install.sh -n "$CLUSTER_NAME" -m $ES_HEAP -v "$ES_VERSION" -A "$USER_ADMIN_PWD" -R "$USER_READ_PWD" -K "$USER_KIBANA_PWD" -S "$USER_LOGSTASH_PWD" -B "$BOOTSTRAP_PASSWORD" -Z "$DATANODE_COUNT" -p "$NAMESPACE_PREFIX" -a "$STORAGE_ACCOUNT" -k "$STORAGE_KEY" -E "$STORAGE_SUFFIX" -L "$INSTALL_ADDITIONAL_PLUGINS" -C "$YAML_CONFIGURATION" $INSTALL_SWITCHES
+bash elasticsearch-ubuntu-install.sh -n "$CLUSTER_NAME" -m $ES_HEAP -v "$ES_VERSION" \
+    -A "$USER_ADMIN_PWD" -R "$USER_READ_PWD" -K "$USER_KIBANA_PWD" -S "$USER_LOGSTASH_PWD" \
+    -B "$BOOTSTRAP_PASSWORD" -Z "$DATANODE_COUNT" -p "$NAMESPACE_PREFIX" -a "$STORAGE_ACCOUNT" \
+    -k "$STORAGE_KEY" -E "$STORAGE_SUFFIX" -L "$INSTALL_ADDITIONAL_PLUGINS" -C "$YAML_CONFIGURATION" \
+    -r "$AZURE_FILE_STORAGE_ACCOUNT" -b "$AZURE_FILE_STORAGE_ACCOUNT_KEY" -u "$AZURE_FILE_STORAGE_ENDPOINT_SUFFIX" \
+    -q $AZURE_FILE_STORAGE_QUOTA -i "$AZURE_FILE_STORAGE_SHARE" $INSTALL_SWITCHES
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   log "installing Elasticsearch returned exit code $EXIT_CODE"

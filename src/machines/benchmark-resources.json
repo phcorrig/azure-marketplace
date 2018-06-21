@@ -168,7 +168,7 @@
         "storageProfile": {
           "imageReference": "[parameters('vm').imageReference]",
           "osDisk": {
-            "name": "osdisk",
+            "name": "[concat(variables('namespace'), '-osdisk')]",
             "managedDisk": {
               "storageAccountType": "[parameters('vm').storageAccountType]"
             },

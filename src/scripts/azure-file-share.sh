@@ -91,8 +91,6 @@ install_azure_cli()
 {
   log "[install_azure_cli] installing azure cli 2.0 from apt"
   if [ $(dpkg-query -W -f='${Status}' azure-cli 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
-    (apt-get -yq install pwgen || (sleep 15; apt-get -yq install pwgen))
-
     local AZ_REPO=$(lsb_release -cs)
     echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
       sudo tee /etc/apt/sources.list.d/azure-cli.list
